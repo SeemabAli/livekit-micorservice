@@ -77,7 +77,7 @@ func CreateRoom(RoomName string) (*livekit.Room, error) {
 	if err != nil {
 		return room, err
 	}
-
+	log.Println("Room Created Successfully" , room.Name)
 	return room, err
 }
 
