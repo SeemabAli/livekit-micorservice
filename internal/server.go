@@ -68,7 +68,7 @@ func GetJoinToken(room, host, identity string) (string, error) {
 	return token, nil
 }
 
-func CreateRoam(RoomName string) (*livekit.Room, error) {
+func CreateRoom(RoomName string) (*livekit.Room, error) {
 	var roomClient = lksdk.NewRoomServiceClient(host, os.Getenv("LIVEKIT_API_KEY"), os.Getenv("LIVEKIT_API_SECRET"))
 	room, err := roomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
 		Name:            RoomName,
@@ -87,7 +87,7 @@ func ListAllRooms() ([]*livekit.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("Rooms:" , rooms.GetRoom())
 	return rooms.GetRooms(), nil
 }
 
@@ -98,6 +98,7 @@ func DeleteRoom(roomName string) error {
 	if err != nil {
 		return err
 	}
+	log.Println("Room Deleted Successfully", roomName)
 	return nil
 }
 
