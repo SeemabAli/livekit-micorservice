@@ -38,6 +38,8 @@ func main() {
 
 	r.GET("/ListLiveStreams", handler.ListLiveHandler)
 
+	r.POST("/EndLiveStream", handler.EndLiveHandler)
+
 	r.POST("webhook", handler.WebhookHandler)
 
 	if err := r.Run(":8080"); err != nil {

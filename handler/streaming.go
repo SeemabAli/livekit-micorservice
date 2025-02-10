@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
-
+	"log"
 	"github.com/LinuxSploit/Livekit-Mircroservice/internal"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -24,7 +24,7 @@ func HostLiveHandler(c *gin.Context) {
 		return
 	}
 
-	room, err := internal.CreateRoom(data.RoomName)
+	room, err := internal.CreateRoam(data.RoomName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -33,6 +33,41 @@ func HostLiveHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"token": hostToken})
 
+}
+
+// end live stream
+func EndLiveHandler(c *gin.Context) {
+	
+	var data RoomData
+	err := c.MustBindWith(&data, binding.JSON)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	rooms, err := internal.ListAllRooms()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	for _, r := range rooms {
+		if r.Name == data.RoomName {
+			err := internal.DeleteRoom(data.RoomName)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, err)
+				return
+			}
+
+			log.Printf("Room %s ended successfully", data.RoomName)
+			
+			c.JSON(http.StatusOK, gin.H{"message": "Room ended"})
+
+			return
+		}
+	}
+
+	c.JSON(http.StatusBadRequest, gin.H{"error": "Room not found"})
 }
 
 func JoinLiveHandler(c *gin.Context) {
