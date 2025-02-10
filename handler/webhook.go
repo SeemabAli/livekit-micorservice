@@ -3,7 +3,6 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -27,102 +26,82 @@ type respEndLive struct {
 }
 
 func WebhookHandler(c *gin.Context) {
+	log.Println("Received Webhook", c.Request);
 	authProvider := auth.NewSimpleKeyProvider(
 		os.Getenv("LIVEKIT_API_KEY"), os.Getenv("LIVEKIT_API_SECRET"),
 	)
 	// Event is a livekit.WebhookEvent{} object
 	event, err := webhook.ReceiveWebhookEvent(c.Request, authProvider)
 	if err != nil {
-		// Could not validate, handle error
+		log.Println("Webhook validation failed:", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid webhook signature"})
 		return
 	}
-	// Consume WebhookEvent
 
-	switch event.Event {
-	case "participant_left":
+	if(event.Event == "participant_left") {
+		log.Printf("Participant %s left room %s", event.Participant.Identity, event.Room.Name)
 
-		if event.Participant.Permission.CanPublish {
-			internal.DeleteRoom(event.Room.Name)
-			id, err := strconv.Atoi(event.Room.Name)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			aroom := room{
-				Email:  event.Participant.Identity,
-				LiveID: id,
-			}
-			bData, err := json.Marshal(aroom)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			resp, err := http.Post("https://api.mindlinkstechnology.com/api/AceBeauty/endLive", "application/json", bytes.NewBuffer(bData))
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			bresp, err := io.ReadAll(resp.Body)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			endResp := respEndLive{}
-			err = json.Unmarshal(bresp, &endResp)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			if endResp.Valid {
-				fmt.Println("room successfully deleted!")
-			}
-		} else {
-			id, err := strconv.Atoi(event.Room.Name)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			aroom := room{
-				Email:  event.Participant.Identity,
-				LiveID: id,
-			}
-			bData, err := json.Marshal(aroom)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			resp, err := http.Post("https://api.mindlinkstechnology.com/api/AceBeauty/leftLive", "application/json", bytes.NewBuffer(bData))
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			bresp, err := io.ReadAll(resp.Body)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			endResp := respEndLive{}
-			err = json.Unmarshal(bresp, &endResp)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			if endResp.Valid {
-				fmt.Println(aroom.Email+" has left Live Stram: ", aroom.LiveID)
-			}
+		// convert room id into integer
+		id, err := strconv.Atoi(event.Room.Name)
+		if err != nil {
+			log.Println("Invalid room name", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room name"})
+			return
 		}
 
-		// http.Post("https://api.mindlinkstechnology.com/api/AceBeauty/leftLive", "application/json")
-	}
+		aroom := room{
+			Email:  event.Participant.Identity,
+			LiveID: id,
+		}
 
+
+		// prepare Json payload
+		bData, err := json.Marshal(aroom)
+		if err != nil {
+			log.Println("Failed to marshal room data", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal room data"})
+			return
+		}
+
+		// determine the API endpoint and delete the room if the participant is a host
+		var apiUrl string
+		if(event.Participant.Permission.CanPublish){
+			apiUrl = "https://api.mindlinkstechnology.com/api/AceBeauty/endLive"
+			internal.DeleteRoom(event.Room.Name)
+		} else {
+			apiUrl = "https://api.mindlinkstechnology.com/api/AceBeauty/leftLive"
+		}
+
+		// send HttpRequest to the API
+		resp , err := http.Post(apiUrl, "application/json", bytes.NewBuffer(bData))
+		if(err != nil){
+			log.Println("Failed to send request to API", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to API"})
+			return
+		}
+		//  Close the resp body to prevent leaks
+		resp.Body.Close()
+
+		// read the response body
+		bresp, err := io.ReadAll(resp.Body)
+		if(err != nil){
+			log.Println("Failed to read response body", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read response body"})
+			return
+		}
+
+		endResp := respEndLive{}
+        err = json.Unmarshal(bresp, &endResp)
+        if err != nil {
+            log.Println("Failed to parse API response:", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Response decoding failed"})
+            return
+        }
+
+        if endResp.Valid {
+            log.Println("Room update successful:", endResp.Message)
+        }
+
+        c.JSON(http.StatusOK, gin.H{"status": "success"})
+	}
 }

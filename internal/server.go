@@ -6,6 +6,7 @@ import (
 	"time"
 	"log"
 	"github.com/livekit/protocol/auth"
+
 	livekit "github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
 )
@@ -71,13 +72,13 @@ func CreateRoom(RoomName string) (*livekit.Room, error) {
 	var roomClient = lksdk.NewRoomServiceClient(host, os.Getenv("LIVEKIT_API_KEY"), os.Getenv("LIVEKIT_API_SECRET"))
 	room, err := roomClient.CreateRoom(context.Background(), &livekit.CreateRoomRequest{
 		Name:            RoomName,
-		EmptyTimeout:    30, // 30 sec
+		EmptyTimeout:   30, // 30 sec
 		MaxParticipants: 100,
 	})
 	if err != nil {
 		return room, err
 	}
-	log.Println("Room Created Successfully" , room.Name)
+	log.Println("Room created successfully", room.Name);
 	return room, err
 }
 
@@ -86,7 +87,7 @@ func ListAllRooms() ([]*livekit.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Rooms:" , rooms.GetRooms())
+	log.Println("Rooms: ", rooms.GetRooms());
 	return rooms.GetRooms(), nil
 }
 
@@ -97,7 +98,7 @@ func DeleteRoom(roomName string) error {
 	if err != nil {
 		return err
 	}
-	log.Println("Room Deleted Successfully", roomName)
+	log.Println("Room deleted successfully", roomName);
 	return nil
 }
 

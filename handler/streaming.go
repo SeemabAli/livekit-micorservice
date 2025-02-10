@@ -24,7 +24,7 @@ func HostLiveHandler(c *gin.Context) {
 		return
 	}
 
-	room, err := internal.CreateRoam(data.RoomName)
+	room, err := internal.CreateRoom(data.RoomName)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
