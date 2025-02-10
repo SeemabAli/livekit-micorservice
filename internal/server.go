@@ -4,14 +4,13 @@ import (
 	"context"
 	"os"
 	"time"
-
+	"log"
 	"github.com/livekit/protocol/auth"
-
 	livekit "github.com/livekit/protocol/livekit"
 	lksdk "github.com/livekit/server-sdk-go"
 )
 
-var host = "https://livekit.tssclinicallabs.com"
+var host = "http  s://livekit.tssclinicallabs.com"
 var roomClient *lksdk.RoomServiceClient
 
 func Init() {
