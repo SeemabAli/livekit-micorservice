@@ -10,7 +10,7 @@ import (
 	lksdk "github.com/livekit/server-sdk-go"
 )
 
-var host = "http  s://livekit.tssclinicallabs.com"
+var host = "https://livekit.tssclinicallabs.com"
 var roomClient *lksdk.RoomServiceClient
 
 func Init() {
