@@ -59,7 +59,7 @@ func WebhookHandler(c *gin.Context) {
 				return
 			}
 
-			resp, err := http.Post("https://acebeautyapi.tssclinicallabs.com/api/AceBeauty/endLive", "application/json", bytes.NewBuffer(bData))
+			resp, err := http.Post("https://api.mindlinkstechnology.com/api/AceBeauty/endLive", "application/json", bytes.NewBuffer(bData))
 			if err != nil {
 				log.Println(err)
 				return
