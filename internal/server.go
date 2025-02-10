@@ -87,7 +87,7 @@ func ListAllRooms() ([]*livekit.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Rooms:" , rooms.GetRoom())
+	log.Println("Rooms:" , rooms.GetRooms())
 	return rooms.GetRooms(), nil
 }
 
